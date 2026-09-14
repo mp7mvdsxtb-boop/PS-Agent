@@ -9,6 +9,16 @@ echo.
 
 cd /d "%~dp0"
 
+if not exist "package.json" (
+    echo.
+    echo  [ERROR] Please EXTRACT the zip first!
+    echo  Right-click the zip - Extract All
+    echo  Do NOT run inside the zip preview.
+    echo.
+    pause
+    exit /b 1
+)
+
 echo [1/5] Checking update...
 node check-update.js
 if %errorlevel% neq 0 (
@@ -21,7 +31,7 @@ echo [2/5] Checking environment...
 if not exist "node_modules" (
     echo.
     echo  [ERROR] Dependencies not found
-    echo  Please run 首次配置.bat first
+    echo  Please run ???????.bat first
     echo.
     pause
     exit /b 1
@@ -44,7 +54,7 @@ echo [4/5] Checking config...
 if not exist "%USERPROFILE%\.photoshop-mcp\data.db" (
     echo.
     echo  [ERROR] Config not found
-    echo  Please run 首次配置.bat first
+    echo  Please run ???????.bat first
     echo.
     pause
     exit /b 1
