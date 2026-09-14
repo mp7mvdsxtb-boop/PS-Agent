@@ -45,7 +45,7 @@ async function captureImage() {
     try {
         const ping = await callToolWithTimeout(client, 'photoshop_ping', {}, 8000);
         const pingText = typeof ping.content === 'string' ? ping.content : ping.content?.map(c => c.text || '').join('');
-        if (!/ok/i.test(pingText) && !/true/i.test(pingText)) {
+        if (!/successfully|connected/i.test(pingText)) {
             throw new Error('Photoshop 未连接，请先打开 Photoshop 并载入图片');
         }
     } catch (e) {
