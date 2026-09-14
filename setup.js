@@ -199,7 +199,7 @@ async function main() {
       console.log('  解决办法：');
       console.log('  1. 关闭本窗口');
       console.log('  2. 删除本目录下的 node_modules 文件夹');
-      console.log('  3. 重新双击 首次配置.bat');
+      console.log('  3. 重新双击 Setup.bat');
     } else {
       console.log('  原因：可能是程序正在运行，锁定了配置文件。');
       console.log('  解决办法：先关闭正在运行的程序（黑色窗口），再重新运行本配置。');
@@ -221,7 +221,7 @@ async function main() {
 
   console.log('  现在你可以：');
   console.log('');
-  console.log('  1. 双击 "启动AI-P图.bat" 启动程序');
+  console.log('  1. 双击 Start.bat 启动程序');
   console.log('  2. 打开浏览器访问 http://localhost:5175');
   console.log('  3. 在聊天框输入指令，例如：');
   console.log('     - "把图片调亮一点"');

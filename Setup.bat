@@ -8,19 +8,19 @@ echo.
 
 cd /d "%~dp0"
 
-if not exist "package.json" goto :noextract
+if not exist "package.json" goto noextract
 
 echo [1/3] Checking environment...
 echo       Configuring China mirror...
 call npm config set registry https://registry.npmmirror.com
 set npm_config_better_sqlite3_binary_host_mirror=https://registry.npmmirror.com/-/binary/better-sqlite3
 
-if exist "node_modules\better-sqlite3\build\Release\better_sqlite3.node" goto :skipinstall
+if exist "node_modules\better-sqlite3\build\Release\better_sqlite3.node" goto skipinstall
 
 echo       Installing dependencies...
 if exist "node_modules" rmdir /s /q "node_modules"
 call npm install --registry=https://registry.npmmirror.com
-if errorlevel 1 goto :installfailed
+if errorlevel 1 goto installfailed
 
 :skipinstall
 echo       Environment OK
@@ -29,7 +29,7 @@ echo.
 echo [2/3] Running setup wizard...
 echo.
 node setup.js
-if errorlevel 1 goto :setupfailed
+if errorlevel 1 goto setupfailed
 
 echo.
 echo [3/3] Done
