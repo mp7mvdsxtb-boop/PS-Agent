@@ -71,17 +71,35 @@ function httpRequest(url, options = {}) {
     });
 }
 
+// GitHub 镜像加速前缀（国内可直接访问）
+const GITHUB_MIRRORS = [
+    'https://ghfast.top/',
+    'https://gh-proxy.com/',
+    'https://ghproxy.net/'
+];
+
+// 生成镜像地址列表（镜像优先，最后是直连）
+function buildUrls(githubUrl) {
+    const urls = GITHUB_MIRRORS.map(m => m + githubUrl);
+    urls.push(githubUrl);
+    return urls;
+}
+
 // 检查远程版本
 async function checkRemoteVersion(config) {
-    const url = `https://raw.githubusercontent.com/${config.repoOwner}/${config.repoName}/${config.branch}/releases/version.json`;
-    try {
-        const resp = await httpRequest(url, { timeout: 10000 });
-        if (resp.status === 200) {
-            return JSON.parse(resp.data);
+    const githubUrl = `https://raw.githubusercontent.com/${config.repoOwner}/${config.repoName}/${config.branch}/releases/version.json`;
+    const urls = buildUrls(githubUrl);
+    for (const url of urls) {
+        try {
+            const resp = await httpRequest(url, { timeout: 10000 });
+            if (resp.status === 200) {
+                return JSON.parse(resp.data);
+            }
+        } catch (e) {
+            // 尝试下一个地址
         }
-    } catch (e) {
-        console.error('检查更新失败:', e.message);
     }
+    console.error('检查更新失败：所有地址均无法访问');
     return null;
 }
 
@@ -90,8 +108,26 @@ function verifyDownloadPassword(inputPassword, config) {
     return inputPassword === config.downloadPassword;
 }
 
-// 下载文件
+// 下载文件（自动尝试镜像加速）
 async function downloadFile(url, destPath) {
+    const urls = url.startsWith('https://github.com') || url.startsWith('https://raw.githubusercontent.com')
+        ? buildUrls(url)
+        : [url];
+
+    let lastErr = null;
+    for (const u of urls) {
+        try {
+            await downloadSingle(u, destPath);
+            return destPath;
+        } catch (e) {
+            lastErr = e;
+            if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+        }
+    }
+    throw new Error('下载失败: ' + (lastErr ? lastErr.message : '所有地址均无法访问'));
+}
+
+function downloadSingle(url, destPath) {
     return new Promise((resolve, reject) => {
         const isHttps = url.startsWith('https://');
         const lib = isHttps ? https : http;
@@ -99,7 +135,7 @@ async function downloadFile(url, destPath) {
         const req = lib.get(url, { timeout: 120000 }, (res) => {
             if (res.statusCode === 302 || res.statusCode === 301) {
                 // 跟随重定向
-                return downloadFile(res.headers.location, destPath).then(resolve).catch(reject);
+                return downloadSingle(res.headers.location, destPath).then(resolve).catch(reject);
             }
 
             if (res.statusCode !== 200) {
