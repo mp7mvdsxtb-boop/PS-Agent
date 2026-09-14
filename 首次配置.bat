@@ -13,8 +13,12 @@ echo       Configuring China mirror...
 call npm config set registry https://registry.npmmirror.com
 set npm_config_better_sqlite3_binary_host_mirror=https://registry.npmmirror.com/-/binary/better-sqlite3
 
-if not exist "node_modules" (
+if not exist "node_modules\better-sqlite3\build\Release\better_sqlite3.node" (
     echo       Installing dependencies...
+    if exist "node_modules" (
+        echo       (Found broken install, removing old files...)
+        rmdir /s /q "node_modules" 2>nul
+    )
     call npm install --registry=https://registry.npmmirror.com
     if %errorlevel% neq 0 (
         echo.
