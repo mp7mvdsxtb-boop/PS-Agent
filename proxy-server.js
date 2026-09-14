@@ -451,7 +451,7 @@ const server = http.createServer(async (req, res) => {
                     res.end(JSON.stringify({ ok: false, error: '缺少目标描述' }));
                     return;
                 }
-                const steps = await runClosedLoop(goal, 3);
+                const steps = await runClosedLoop(goal, 2);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true, steps }));
             } catch (e) {

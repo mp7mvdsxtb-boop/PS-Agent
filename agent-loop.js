@@ -151,7 +151,7 @@ async function executeEdit(prompt) {
 }
 
 // ---------- 闭环主循环 ----------
-async function runClosedLoop(goal, maxRounds = 3) {
+async function runClosedLoop(goal, maxRounds = 2) {
     const steps = [];
     for (let i = 1; i <= maxRounds; i++) {
         // 1. 导出当前图片

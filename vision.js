@@ -76,7 +76,7 @@ async function callVision(modelConfig, imageBase64, prompt, mimeType = 'image/pn
             const url = `${baseUrl}/v1/messages`;
             const payload = {
                 model: modelConfig.model,
-                max_tokens: 1024,
+                max_tokens: 300,
                 messages: [{
                     role: 'user',
                     content: [
@@ -105,7 +105,7 @@ async function callVision(modelConfig, imageBase64, prompt, mimeType = 'image/pn
             const dataUrl = `data:${mimeType};base64,${imageBase64}`;
             const payload = {
                 model: modelConfig.model,
-                max_tokens: 1024,
+                max_tokens: 300,
                 messages: [{
                     role: 'user',
                     content: [
