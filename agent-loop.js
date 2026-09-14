@@ -6,6 +6,35 @@ const path = require('path');
 const os = require('os');
 const http = require('http');
 const { getVisionConfig, callVision } = require('./vision');
+const { PNG } = require('pngjs');
+
+// 图片缩小到最长边 maxDim 以内，减少视觉模型 token 消耗
+function downscaleImage(base64, maxDim = 768) {
+    try {
+        const png = PNG.sync.read(Buffer.from(base64, 'base64'));
+        const { width, height } = png;
+        if (width <= maxDim && height <= maxDim) return base64;
+        const scale = maxDim / Math.max(width, height);
+        const newW = Math.max(1, Math.round(width * scale));
+        const newH = Math.max(1, Math.round(height * scale));
+        const result = new PNG({ width: newW, height: newH });
+        for (let y = 0; y < newH; y++) {
+            const srcY = Math.min(height - 1, Math.floor((y + 0.5) / scale));
+            for (let x = 0; x < newW; x++) {
+                const srcX = Math.min(width - 1, Math.floor((x + 0.5) / scale));
+                const si = (width * srcY + srcX) << 2;
+                const di = (newW * y + x) << 2;
+                result.data[di] = png.data[si];
+                result.data[di + 1] = png.data[si + 1];
+                result.data[di + 2] = png.data[si + 2];
+                result.data[di + 3] = png.data[si + 3];
+            }
+        }
+        return PNG.sync.write(result).toString('base64');
+    } catch (e) {
+        return base64;
+    }
+}
 
 const PHOTOSHOP_MCP_ENTRY = path.join(__dirname, 'node_modules', '@alisaitteke', 'photoshop-mcp', 'dist', 'index.js');
 const TEMP_DIR = path.join(__dirname, 'temp');
@@ -65,7 +94,8 @@ async function captureImage() {
         throw new Error('导出失败：未生成文件');
     }
     const base64 = fs.readFileSync(filePath).toString('base64');
-    return { base64, filePath, mimeType: 'image/png' };
+    const downscaled = downscaleImage(base64, 768);
+    return { base64: downscaled, filePath, mimeType: 'image/png' };
 }
 
 // ---------- 视觉评估 ----------

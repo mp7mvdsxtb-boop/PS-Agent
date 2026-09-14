@@ -8,13 +8,18 @@
     "setup": "node setup.js",
     "update": "node check-update.js"
   },
-  "keywords": ["photoshop", "ai", "image-editing"],
+  "keywords": [
+    "photoshop",
+    "ai",
+    "image-editing"
+  ],
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "@alisaitteke/photoshop-mcp": "^1.7.6",
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "better-sqlite3": "^12.9.0"
+    "better-sqlite3": "^12.9.0",
+    "pngjs": "^7.0.0"
   },
   "allowScripts": {
     "better-sqlite3": true
