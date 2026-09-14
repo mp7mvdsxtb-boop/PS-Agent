@@ -10,7 +10,7 @@ cd /d "%~dp0"
 
 echo [1/3] Checking environment...
 echo       Configuring China mirror...
-npm config set registry https://registry.npmmirror.com
+call npm config set registry https://registry.npmmirror.com
 set npm_config_better_sqlite3_binary_host_mirror=https://registry.npmmirror.com/-/binary/better-sqlite3
 
 if not exist "node_modules" (
