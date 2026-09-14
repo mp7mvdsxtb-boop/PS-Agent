@@ -9,9 +9,8 @@ const { getVisionConfig, callVision } = require('./vision');
 
 const PHOTOSHOP_MCP_ENTRY = path.join(__dirname, 'node_modules', '@alisaitteke', 'photoshop-mcp', 'dist', 'index.js');
 const TEMP_DIR = path.join(__dirname, 'temp');
-// 会话文件存储在用户目录下
-const USER_DATA_DIR = path.join(os.homedir(), '.ai-ps');
-const SESSION_FILE = path.join(USER_DATA_DIR, 'ui-session.json');
+// 会话文件由 photoshop-mcp-ui 写入，位置在 ~/.photoshop-mcp/
+const SESSION_FILE = path.join(os.homedir(), '.photoshop-mcp', 'ui-session.json');
 
 let mcpClient = null;
 

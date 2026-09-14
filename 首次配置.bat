@@ -1,5 +1,4 @@
 @echo off
-color 0A
 cls
 echo.
 echo  ============================================
@@ -42,7 +41,7 @@ echo.
 echo [3/3] Done
 echo.
 echo  ============================================
-echo   Please double-click 启动AI-P图.bat to start
+echo   Please double-click Start.bat to start
 echo  ============================================
 echo.
 pause

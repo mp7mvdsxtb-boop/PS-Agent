@@ -1,5 +1,4 @@
 @echo off
-color 0A
 cls
 echo.
 echo  ============================================
@@ -22,7 +21,7 @@ echo [2/5] Checking environment...
 if not exist "node_modules" (
     echo.
     echo  [ERROR] Dependencies not found
-    echo  Please run 首次配置.bat first
+    echo  Please run Setup.bat first
     echo.
     pause
     exit /b 1
@@ -45,7 +44,7 @@ echo [4/5] Checking config...
 if not exist "%USERPROFILE%\.ai-ps\config.json" (
     echo.
     echo  [ERROR] Config not found
-    echo  Please run 首次配置.bat first
+    echo  Please run Setup.bat first
     echo.
     pause
     exit /b 1

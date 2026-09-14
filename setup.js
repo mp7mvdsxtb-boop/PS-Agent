@@ -1,10 +1,7 @@
 const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 const { execSync } = require('child_process');
-const { saveEncryptedConfig, configExists, USER_DATA_DIR } = require('./crypto-tool');
-const { saveVisionConfig } = require('./vision');
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -22,17 +19,6 @@ async function main() {
   console.log('    智能体控制Photoshop - 让AI帮你P图');
   console.log('==============================================');
   console.log('');
-
-  // 检查是否已有配置
-  if (configExists()) {
-    console.log('  检测到已有配置');
-    const reconfig = await ask('  是否重新配置？(y/N): ');
-    if (reconfig.toLowerCase() !== 'y') {
-      console.log('  跳过配置，使用现有配置');
-      rl.close();
-      return;
-    }
-  }
 
   console.log('[第1步] 检查Photoshop...');
   try {
@@ -63,13 +49,6 @@ async function main() {
   console.log('');
 
   const provider = await ask('  请输入数字 (1-7): ');
-
-  let config = {
-    providers: {},
-    activeProvider: '',
-    activeModel: '',
-    actionPlanBeta: false
-  };
 
   let providerName = '';
   let baseUrl = '';
@@ -171,100 +150,52 @@ async function main() {
   }
 
   console.log('');
-  console.log('[第3步] 设置保护密码');
-  console.log('');
-  console.log('  保护密码用于加密你的 API Key，防止泄露');
-  console.log('');
-  console.log('  选择密码类型：');
-  console.log('  [1] 与下载密码相同 (songjiahua)');
-  console.log('  [2] 自定义密码');
-  console.log('');
+  console.log('[第3步] 保存配置...');
 
-  const passwordChoice = await ask('  请输入数字 (1-2): ');
-  let protectionPassword = '';
-
-  switch (passwordChoice) {
-    case '1':
-      protectionPassword = 'songjiahua';
-      console.log('  [OK] 使用下载密码作为保护密码');
-      break;
-
-    case '2':
-      console.log('');
-      const password1 = await ask('  请输入自定义密码: ');
-      const password2 = await ask('  请再次输入密码确认: ');
-      if (password1 !== password2) {
-        console.log('  [错误] 两次密码输入不一致');
-        rl.close();
-        return;
-      }
-      if (password1.length < 4) {
-        console.log('  [错误] 密码长度至少4位');
-        rl.close();
-        return;
-      }
-      protectionPassword = password1;
-      console.log('  [OK] 密码设置成功');
-      break;
-
-    default:
-      console.log('  无效的选择');
-      rl.close();
-      return;
+  const dbPath = path.join(process.env.USERPROFILE, '.photoshop-mcp', 'data.db');
+  const dir = path.dirname(dbPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
 
-  console.log('');
-  console.log('[第4步] 保存配置...');
-
-  // 保存聊天模型配置到加密文件
-  const chatConfig = {
-    providers: {
-      custom: {
-        apiKey: apiKey,
-        defaultModel: model
-      }
-    },
-    activeProvider: 'custom',
-    activeModel: model,
-    actionPlanBeta: false,
-    customProvider: {
-      name: providerName,
-      baseUrl: baseUrl,
-      apiKey: apiKey,
-      apiFormat: apiFormat,
-      models: [{
-        id: model,
-        label: providerName + ' ' + model
-      }],
-      defaultModel: model
-    }
-  };
-
   try {
-    // 确保用户数据目录存在
-    if (!fs.existsSync(USER_DATA_DIR)) {
-      fs.mkdirSync(USER_DATA_DIR, { recursive: true });
-    }
+    const Database = require('better-sqlite3');
 
-    // 保存加密配置
-    saveEncryptedConfig(chatConfig, protectionPassword);
-    console.log('  [OK] 聊天模型配置已保存（加密）');
+    const db = new Database(dbPath);
+    db.exec('CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT)');
 
-    // 如果选择的模型支持图片，同时保存为视觉模型
-    if (['1', '2', '3', '4'].includes(provider)) {
-      const visionConfig = {
+    const configData = {
+      providers: {
+        custom: {
+          apiKey: apiKey,
+          defaultModel: model
+        }
+      },
+      activeProvider: 'custom',
+      activeModel: model,
+      actionPlanBeta: false,
+      customProvider: {
         name: providerName,
         baseUrl: baseUrl,
         apiKey: apiKey,
         apiFormat: apiFormat,
-        model: model
-      };
-      saveVisionConfig(visionConfig);
-      console.log('  [OK] 视觉模型配置已保存');
-    }
+        models: [{
+          id: model,
+          label: providerName + ' ' + model
+        }],
+        defaultModel: model
+      }
+    };
 
+    db.prepare('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)').run('config', JSON.stringify(configData));
+    db.close();
+
+    console.log('  [OK] 配置已保存');
   } catch (e) {
     console.log('  [错误] 保存配置失败: ' + e.message);
+    console.log('');
+    console.log('  原因：可能是程序正在运行，锁定了配置文件。');
+    console.log('  解决办法：先关闭正在运行的程序（黑色窗口），再重新运行本配置。');
     console.log('');
     rl.close();
     return;
@@ -280,18 +211,11 @@ async function main() {
     console.log('');
   }
 
-  console.log('  安全提示：');
-  console.log('  - API Key 已加密存储在 ~/.ai-ps/ 目录');
-  console.log('  - 程序更新不会影响你的配置');
-  console.log('  - 请牢记你的保护密码，忘记密码需要重新配置');
-  console.log('');
-
   console.log('  现在你可以：');
   console.log('');
   console.log('  1. 双击 "启动AI-P图.bat" 启动程序');
-  console.log('  2. 输入保护密码解锁');
-  console.log('  3. 打开浏览器访问 http://localhost:5175');
-  console.log('  4. 在聊天框输入指令，例如：');
+  console.log('  2. 打开浏览器访问 http://localhost:5175');
+  console.log('  3. 在聊天框输入指令，例如：');
   console.log('     - "把图片调亮一点"');
   console.log('     - "把背景去掉"');
   console.log('');

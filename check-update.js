@@ -3,7 +3,6 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-const { decrypt } = require('./crypto-tool');
 
 // 更新配置
 const UPDATE_CONFIG_FILE = path.join(__dirname, 'update-config.json');
