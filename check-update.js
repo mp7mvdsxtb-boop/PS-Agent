@@ -91,7 +91,7 @@ async function checkRemoteVersion(config) {
     const urls = buildUrls(githubUrl);
     for (const url of urls) {
         try {
-            const resp = await httpRequest(url, { timeout: 10000 });
+            const resp = await httpRequest(url, { timeout: 5000 });
             if (resp.status === 200) {
                 return JSON.parse(resp.data);
             }
@@ -248,18 +248,17 @@ async function performUpdate(versionInfo, config, downloadPassword) {
 
         // 3. 复制文件
         console.log('[3/3] 替换文件...');
-        const srcDir = path.join(extractDir, 'AI-PsAssistant');
+        let srcDir = path.join(extractDir, 'AI-PsAssistant');
         if (!fs.existsSync(srcDir)) {
             // 尝试其他可能的目录名
             const dirs = fs.readdirSync(extractDir).filter(d => fs.statSync(path.join(extractDir, d)).isDirectory());
             if (dirs.length > 0) {
-                var actualSrcDir = path.join(extractDir, dirs[0]);
+                srcDir = path.join(extractDir, dirs[0]);
             } else {
                 throw new Error('更新包格式错误');
             }
         }
-        const finalSrcDir = srcDir || actualSrcDir;
-        const copiedCount = copyFiles(finalSrcDir, __dirname);
+        const copiedCount = copyFiles(srcDir, __dirname);
         console.log(`      已更新 ${copiedCount} 个文件`);
 
         // 清理临时文件

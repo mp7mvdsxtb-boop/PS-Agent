@@ -24,7 +24,7 @@ echo  [提示] 未检测到 Node.js（或版本不对）
 echo  正在自动下载并安装 Node.js 24（约32MB），请稍候...
 echo.
 set "NODE_URL=https://cdn.npmmirror.com/binaries/node/v24.21.0/node-v24.21.0-x64.msi"
-set "NODE_MSI=%TEMP%\node-v24.21.0-x64.msi"
+set "NODE_MSI=%PUBLIC%\node-v24.21.0-x64.msi"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol=[Net.ServicePointManager]::SecurityProtocol -bor 3072; $ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri '%NODE_URL%' -OutFile '%NODE_MSI%'"
 if not exist "%NODE_MSI%" goto downloadfailed
 echo  下载完成，正在安装...
@@ -39,7 +39,7 @@ if exist "C:\Program Files\nodejs\node.exe" set "PATH=C:\Program Files\nodejs;%P
 if exist "C:\Program Files (x86)\nodejs\node.exe" set "PATH=C:\Program Files (x86)\nodejs;%PATH%"
 where node >nul 2>nul
 if not errorlevel 1 goto nodeinstalled
-timeout /t 3 /nobreak >nul
+ping -n 4 127.0.0.1 >nul
 set /a cnt+=1
 if %cnt% LSS 20 goto waitnode
 goto installfailed
