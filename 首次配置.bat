@@ -1,42 +1,48 @@
 @echo off
-chcp 65001 >nul
 color 0A
 cls
 echo.
 echo  ============================================
-echo    AI-PsAssistant 首次配置向导
+echo    AI-PsAssistant First Time Setup
 echo  ============================================
 echo.
 
 cd /d "%~dp0"
 
-echo [1/3] 检查环境...
+echo [1/3] Checking environment...
 if not exist "node_modules" (
-    echo       正在安装依赖包...
+    echo       Installing dependencies...
     call npm install
     if %errorlevel% neq 0 (
         echo.
-        echo  [错误] 依赖包安装失败
-        echo  请检查网络连接后重试
+        echo  [ERROR] Failed to install dependencies
+        echo  Please check your network connection
         echo.
         pause
         exit /b 1
     )
-    echo       依赖包安装完成
+    echo       Dependencies installed
 ) else (
-    echo       环境正常
+    echo       Environment OK
 )
 
 echo.
-echo [2/3] 运行配置向导...
+echo [2/3] Running setup wizard...
 echo.
 node setup.js
+if %errorlevel% neq 0 (
+    echo.
+    echo  [ERROR] Setup failed
+    echo.
+    pause
+    exit /b 1
+)
 
 echo.
-echo [3/3] 完成
+echo [3/3] Done
 echo.
 echo  ============================================
-echo   配置完成后，请双击 启动AI-P图.bat 启动程序
+echo   Please double-click 启动AI-P图.bat to start
 echo  ============================================
 echo.
 pause

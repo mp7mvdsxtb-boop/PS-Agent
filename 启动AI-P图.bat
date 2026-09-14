@@ -1,68 +1,67 @@
 @echo off
-chcp 65001 >nul
 color 0A
 cls
 echo.
 echo  ============================================
-echo    AI-PsAssistant 智能体控制Photoshop
-echo    版本 2.1.0 - 自动更新 + 密码保护
+echo    AI-PsAssistant - AI Control Photoshop
+echo    Version 2.1.0
 echo  ============================================
 echo.
 
 cd /d "%~dp0"
 
-echo [1/5] 检查更新...
+echo [1/5] Checking update...
 node check-update.js
 if %errorlevel% neq 0 (
     echo.
-    echo  [提示] 更新检查失败，继续启动...
+    echo  [Tip] Update check failed, continuing...
     echo.
 )
 
-echo [2/5] 检查环境...
+echo [2/5] Checking environment...
 if not exist "node_modules" (
     echo.
-    echo  [错误] 未检测到依赖包，请先运行 首次配置.bat
+    echo  [ERROR] Dependencies not found
+    echo  Please run 首次配置.bat first
     echo.
     pause
     exit /b 1
 )
-echo       环境正常
+echo       Environment OK
 
-echo [3/5] 检查Photoshop...
+echo [3/5] Checking Photoshop...
 tasklist /FI "IMAGENAME eq Photoshop.exe" 2>nul | find /i "Photoshop.exe" >nul
 if %errorlevel% neq 0 (
     echo.
-    echo  [错误] 未检测到Photoshop
-    echo  请先打开Adobe Photoshop，然后重新运行本程序
+    echo  [ERROR] Photoshop not found
+    echo  Please open Adobe Photoshop first
     echo.
     pause
     exit /b 1
 )
-echo       Photoshop 正在运行
+echo       Photoshop is running
 
-echo [4/5] 检查配置...
+echo [4/5] Checking config...
 if not exist "%USERPROFILE%\.ai-ps\config.json" (
     echo.
-    echo  [错误] 未检测到配置
-    echo  请先运行 首次配置.bat
+    echo  [ERROR] Config not found
+    echo  Please run 首次配置.bat first
     echo.
     pause
     exit /b 1
 )
-echo       配置已找到
+echo       Config found
 
-echo [5/5] 启动服务...
+echo [5/5] Starting server...
 echo.
 echo  ============================================
-echo   服务启动后请访问：
-echo   http://localhost:5175
-echo   按 Ctrl+C 停止服务
+echo   Please visit: http://localhost:5175
+echo   Press Ctrl+C to stop
 echo  ============================================
 echo.
 
 node proxy-server.js
 
 echo.
-echo 服务已停止
+echo Server stopped
 pause
