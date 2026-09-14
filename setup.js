@@ -194,8 +194,16 @@ async function main() {
   } catch (e) {
     console.log('  [错误] 保存配置失败: ' + e.message);
     console.log('');
-    console.log('  原因：可能是程序正在运行，锁定了配置文件。');
-    console.log('  解决办法：先关闭正在运行的程序（黑色窗口），再重新运行本配置。');
+    if (e.message.includes('better-sqlite3') || e.message.includes('bindings') || e.message.includes('Could not locate')) {
+      console.log('  原因：依赖包没有装好（better-sqlite3 需要编译/下载）。');
+      console.log('  解决办法：');
+      console.log('  1. 关闭本窗口');
+      console.log('  2. 删除本目录下的 node_modules 文件夹');
+      console.log('  3. 重新双击 首次配置.bat');
+    } else {
+      console.log('  原因：可能是程序正在运行，锁定了配置文件。');
+      console.log('  解决办法：先关闭正在运行的程序（黑色窗口），再重新运行本配置。');
+    }
     console.log('');
     rl.close();
     return;
@@ -225,4 +233,22 @@ async function main() {
   rl.close();
 }
 
-main().catch(console.error);
+process.on('uncaughtException', (err) => {
+  console.log('');
+  console.log('  [错误] 发生异常: ' + err.message);
+  console.log('');
+  process.exit(0);
+});
+process.on('unhandledRejection', (err) => {
+  console.log('');
+  console.log('  [错误] 发生异常: ' + (err && err.message ? err.message : err));
+  console.log('');
+  process.exit(0);
+});
+
+main().catch((e) => {
+  console.log('');
+  console.log('  [错误] ' + (e && e.message ? e.message : e));
+  console.log('');
+  process.exit(0);
+});
