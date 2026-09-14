@@ -23,7 +23,6 @@ Thumbs.db
 desktop.ini
 
 # 更新包临时文件
-*.zip
 update-*/
 
 # IDE
