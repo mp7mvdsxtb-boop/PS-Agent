@@ -188,6 +188,8 @@ async function main() {
     };
 
     db.prepare('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)').run('config', JSON.stringify(configData));
+    db.prepare('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)').run('beta_telemetry_prompt_answered', 'true');
+    db.prepare('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)').run('beta_telemetry_opt_in', 'false');
     db.close();
 
     console.log('  [OK] 配置已保存');

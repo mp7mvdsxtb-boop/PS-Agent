@@ -16,19 +16,22 @@ function startMCPInternal() {
     mcpProcess = spawn(npxCmd, ['photoshop-mcp-ui', '--port', String(INTERNAL_PORT), '--no-open'], {
         cwd: __dirname,
         stdio: ['pipe', 'pipe', 'pipe'],
-        shell: true
+        shell: true,
+        env: { ...process.env, ANALYTICS_DISABLED: 'true' }
     });
     mcpProcess.stdout.on('data', (data) => console.log(`[MCP] ${data.toString().trim()}`));
     mcpProcess.stderr.on('data', (data) => console.error(`[MCP] ${data.toString().trim()}`));
 }
 
 function proxyRequest(req, res) {
+    const headers = { ...req.headers, host: `127.0.0.1:${INTERNAL_PORT}` };
+    delete headers.origin;
     const options = {
         hostname: '127.0.0.1',
         port: INTERNAL_PORT,
         path: req.url,
         method: req.method,
-        headers: { ...req.headers, host: `127.0.0.1:${INTERNAL_PORT}` }
+        headers: headers
     };
     const proxy = http.request(options, (proxyRes) => {
         const contentType = proxyRes.headers['content-type'] || '';
