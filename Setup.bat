@@ -12,10 +12,44 @@ if not exist "package.json" goto noextract
 
 echo [1/4] 检查 Node.js...
 where node >nul 2>nul
-if errorlevel 1 goto nonode
-
+if errorlevel 1 goto installnode
 node -e "process.exit(process.versions.modules==='137'?0:1)"
-if errorlevel 1 goto abimismatch
+if errorlevel 1 goto installnode
+goto nodeok
+
+:installnode
+echo.
+echo  [提示] 未检测到 Node.js（或版本不对）
+echo  正在自动下载并安装 Node.js 24（约32MB），请稍候...
+echo.
+set "NODE_URL=https://cdn.npmmirror.com/binaries/node/v24.21.0/node-v24.21.0-x64.msi"
+set "NODE_MSI=%TEMP%\node-v24.21.0-x64.msi"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol=[Net.ServicePointManager]::SecurityProtocol -bor 3072; $ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri '%NODE_URL%' -OutFile '%NODE_MSI%'"
+if not exist "%NODE_MSI%" goto downloadfailed
+echo  下载完成，正在安装...
+echo  （如弹出用户账户控制提示，请点"是"）
+powershell -NoProfile -Command "Start-Process msiexec -ArgumentList '/i','%NODE_MSI%','/qn','/norestart' -Verb RunAs -Wait"
+set "PATH=C:\Program Files\nodejs;%PATH%"
+set /a cnt=0
+:waitnode
+where node >nul 2>nul
+if not errorlevel 1 goto nodeinstalled
+if exist "C:\Program Files\nodejs\node.exe" set "PATH=C:\Program Files\nodejs;%PATH%"
+if exist "C:\Program Files (x86)\nodejs\node.exe" set "PATH=C:\Program Files (x86)\nodejs;%PATH%"
+where node >nul 2>nul
+if not errorlevel 1 goto nodeinstalled
+timeout /t 3 /nobreak >nul
+set /a cnt+=1
+if %cnt% LSS 20 goto waitnode
+goto installfailed
+
+:nodeinstalled
+node -e "process.exit(process.versions.modules==='137'?0:1)"
+if errorlevel 1 goto versionfailed
+echo  Node.js 安装成功！
+echo.
+
+:nodeok
 echo        Node.js 已就绪
 
 echo [2/4] 检查依赖...
@@ -24,7 +58,7 @@ echo        正在安装依赖（需要联网）...
 call npm config set registry https://registry.npmmirror.com
 set npm_config_better_sqlite3_binary_host_mirror=https://registry.npmmirror.com/-/binary/better-sqlite3
 call npm install --registry=https://registry.npmmirror.com
-if errorlevel 1 goto installfailed
+if errorlevel 1 goto depsfailed
 :skipinstall
 echo        依赖就绪
 
@@ -51,39 +85,39 @@ echo.
 pause
 exit /b 1
 
-:nonode
+:downloadfailed
 echo.
-echo  [错误] 未检测到 Node.js
-echo.
-echo  本程序需要 Node.js 才能运行。
-echo  即将自动打开下载页面，请安装：
-echo.
-echo      Node.js 24 版本 (LTS 长期支持版)
-echo.
-echo  安装完成后，重新双击本文件。
+echo  [错误] 自动下载失败（可能是网络问题）
+echo  请手动下载安装 Node.js 24，即将打开下载页面...
 echo.
 start https://nodejs.org/zh-cn/download
-echo  备用下载地址(国内快): https://npmmirror.com/mirrors/node/
-echo.
-pause
-exit /b 1
-
-:abimismatch
-echo.
-echo  [错误] Node.js 版本不匹配
-echo.
-echo  请安装 Node.js 24 版本 (LTS)：
-echo  即将自动打开下载页面...
-echo.
-start https://nodejs.org/zh-cn/download
-echo  备用下载地址(国内快): https://npmmirror.com/mirrors/node/
-echo.
-echo  安装后重新双击本文件。
+echo  备用下载(国内快): https://npmmirror.com/mirrors/node/
 echo.
 pause
 exit /b 1
 
 :installfailed
+echo.
+echo  [错误] Node.js 安装失败
+echo  请手动下载安装 Node.js 24，即将打开下载页面...
+echo.
+start https://nodejs.org/zh-cn/download
+echo  备用下载(国内快): https://npmmirror.com/mirrors/node/
+echo.
+pause
+exit /b 1
+
+:versionfailed
+echo.
+echo  [错误] Node.js 版本仍然不对
+echo  请手动安装 Node.js 24 版本，即将打开下载页面...
+echo.
+start https://nodejs.org/zh-cn/download
+echo.
+pause
+exit /b 1
+
+:depsfailed
 echo.
 echo  [错误] 依赖安装失败
 echo  请检查网络后重试。
