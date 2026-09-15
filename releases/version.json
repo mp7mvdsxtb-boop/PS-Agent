@@ -1,6 +1,6 @@
 {
-  "version": "2.2.1",
-  "description": "v2.2.1: 修复看图分析大图超限问题(图片自动压缩)",
-  "url": "https://github.com/mp7mvdsxtb-boop/PS-Agent/releases/download/v2.2.1/ai-psassistant-v2.2.1.zip",
+  "version": "2.2.2",
+  "description": "v2.2.2: 增加运行日志(排查问题用)",
+  "url": "https://github.com/mp7mvdsxtb-boop/PS-Agent/releases/download/v2.2.2/ai-psassistant-v2.2.2.zip",
   "releaseDate": "2026-09-15"
 }

@@ -1,6 +1,6 @@
 {
   "name": "ai-psassistant",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "AI智能体控制Photoshop - 让AI帮你P图",
   "main": "proxy-server.js",
   "scripts": {

@@ -7,20 +7,34 @@ const { runClosedLoop } = require('./agent-loop');
 
 const EXTERNAL_PORT = 5175;
 const INTERNAL_PORT = 5176;
+const LOG_FILE = path.join(__dirname, '运行日志.log');
 
 let mcpProcess = null;
+let logStream = null;
 
 function startMCPInternal() {
     console.log('正在启动MCP内部服务...');
+    try {
+        logStream = fs.createWriteStream(LOG_FILE, { flags: 'w' });
+        logStream.write('========== ' + new Date().toISOString() + ' 启动 ==========\n');
+    } catch (e) { logStream = null; }
     const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
     mcpProcess = spawn(npxCmd, ['photoshop-mcp-ui', '--port', String(INTERNAL_PORT), '--no-open'], {
         cwd: __dirname,
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
-        env: { ...process.env, ANALYTICS_DISABLED: 'true' }
+        env: { ...process.env, ANALYTICS_DISABLED: 'true', LOG_LEVEL: '0' }
     });
-    mcpProcess.stdout.on('data', (data) => console.log(`[MCP] ${data.toString().trim()}`));
-    mcpProcess.stderr.on('data', (data) => console.error(`[MCP] ${data.toString().trim()}`));
+    mcpProcess.stdout.on('data', (data) => {
+        const s = data.toString().trim();
+        console.log(`[MCP] ${s}`);
+        if (logStream) logStream.write(s + '\n');
+    });
+    mcpProcess.stderr.on('data', (data) => {
+        const s = data.toString().trim();
+        console.error(`[MCP] ${s}`);
+        if (logStream) logStream.write(s + '\n');
+    });
 }
 
 function proxyRequest(req, res) {
