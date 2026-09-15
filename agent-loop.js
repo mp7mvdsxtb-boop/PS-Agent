@@ -54,7 +54,7 @@ async function captureImage() {
     }
     if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
     const filePath = path.join(TEMP_DIR, `current-${Date.now()}.png`);
-    const result = await callToolWithTimeout(client, 'photoshop_export_as', { path: filePath, format: 'PNG' }, 30000);
+    const result = await callToolWithTimeout(client, 'photoshop_export_as', { path: filePath, format: 'PNG' }, 60000);
     const text = typeof result.content === 'string'
         ? result.content
         : result.content?.map(c => c.text || '').join('');
@@ -129,7 +129,7 @@ function requestJSON(options, body) {
             res.on('end', () => resolve({ status: res.statusCode, data }));
         });
         req.on('error', reject);
-        req.setTimeout(180000, () => { req.destroy(new Error('执行超时')); });
+        req.setTimeout(300000, () => { req.destroy(new Error('执行超时')); });
         if (body) req.write(body);
         req.end();
     });
@@ -171,7 +171,7 @@ async function executeEdit(prompt) {
             res.on('end', () => resolve({ ok: true, chatId }));
         });
         req.on('error', reject);
-        req.setTimeout(180000, () => { req.destroy(); reject(new Error('执行超时')); });
+        req.setTimeout(300000, () => { req.destroy(); reject(new Error('执行超时')); });
         req.write(body);
         req.end();
     });
@@ -201,6 +201,8 @@ async function runClosedLoop(goal, maxRounds = 2, scene = '通用') {
             const instruction = `你是一位专业的修图师。请按照下面的建议精确地修改图片。
 
 修改原则：先调整整体光影和色调，再处理局部细节；修改要克制、自然、不过度。
+
+重要：只使用现成的标准工具（调色、渐变、滤镜、图层、选区等），禁止使用 photoshop_execute_script 工具自己写脚本。
 
 具体建议：
 ${evalResult.feedback}`;
