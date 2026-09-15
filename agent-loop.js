@@ -6,11 +6,12 @@ const path = require('path');
 const os = require('os');
 const http = require('http');
 const { getVisionConfig, callVision } = require('./vision');
-const { PNG } = require('pngjs');
 
 // 图片缩小到最长边 maxDim 以内，减少视觉模型 token 消耗
+// pngjs 为可选依赖：缺失时直接返回原图，不影响运行
 function downscaleImage(base64, maxDim = 768) {
     try {
+        const { PNG } = require('pngjs');
         const png = PNG.sync.read(Buffer.from(base64, 'base64'));
         const { width, height } = png;
         if (width <= maxDim && height <= maxDim) return base64;
