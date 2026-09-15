@@ -59,6 +59,21 @@ function httpRequest(url, options, body) {
     });
 }
 
+// 图片降采样：压缩到最长边 maxDim，避免超 API 大小限制（jimp 可选，缺失时返回原图）
+async function downscaleImage(imageBase64, maxDim = 768) {
+    try {
+        const Jimp = require('jimp');
+        const image = await Jimp.read(Buffer.from(imageBase64, 'base64'));
+        const { width, height } = image.bitmap;
+        if (width <= maxDim && height <= maxDim) return imageBase64;
+        image.scaleToFit(maxDim, maxDim);
+        const out = await image.getBufferAsync('image/png');
+        return out.toString('base64');
+    } catch (e) {
+        return imageBase64;
+    }
+}
+
 // 调用视觉模型分析图片
 async function callVision(modelConfig, imageBase64, prompt, mimeType = 'image/png') {
     if (!modelConfig) {
@@ -72,6 +87,8 @@ async function callVision(modelConfig, imageBase64, prompt, mimeType = 'image/pn
     const apiFormat = modelConfig.apiFormat === 'anthropic' ? 'anthropic' : 'openai';
 
     try {
+        imageBase64 = await downscaleImage(imageBase64, 768);
+
         if (apiFormat === 'anthropic') {
             const url = `${baseUrl}/v1/messages`;
             const payload = {

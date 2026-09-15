@@ -1,6 +1,6 @@
 {
   "name": "ai-psassistant",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "AI智能体控制Photoshop - 让AI帮你P图",
   "main": "proxy-server.js",
   "scripts": {
@@ -19,6 +19,7 @@
     "@alisaitteke/photoshop-mcp": "^1.7.6",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "better-sqlite3": "^12.9.0",
+    "jimp": "^0.22.12",
     "pngjs": "^7.0.0"
   },
   "allowScripts": {

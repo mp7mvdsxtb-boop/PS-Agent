@@ -1,6 +1,6 @@
 {
-  "version": "2.2.0",
-  "description": "v2.2.0: 修复多个问题并优化修图质量(分场景审美提示词、图片降采样省流量)",
-  "url": "https://github.com/mp7mvdsxtb-boop/PS-Agent/releases/download/v2.2.0/ai-psassistant-v2.2.0.zip",
+  "version": "2.2.1",
+  "description": "v2.2.1: 修复看图分析大图超限问题(图片自动压缩)",
+  "url": "https://github.com/mp7mvdsxtb-boop/PS-Agent/releases/download/v2.2.1/ai-psassistant-v2.2.1.zip",
   "releaseDate": "2026-09-15"
 }
