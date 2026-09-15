@@ -98,13 +98,40 @@ async function captureImage() {
     return { base64: downscaled, filePath, mimeType: 'image/png' };
 }
 
+// ---------- 分场景审美标准 ----------
+const SCENE_CRITERIA = {
+    '通用': '整体协调美观，色调自然舒服',
+    '电商产品': '纯白背景、主体突出居中、光线均匀无阴影杂质、产品细节清晰锐利',
+    '人像': '肤色自然、磨皮不过度保留皮肤质感、五官立体、背景干净、整体柔和有层次',
+    '风景': '层次丰富、色彩通透不溢出、天空有细节、对比适中、氛围感强',
+    '美食': '色泽诱人、暖色调、细节清晰、画面有食欲'
+};
+
 // ---------- 视觉评估 ----------
-async function evaluateImage(goal, imageBase64) {
+async function evaluateImage(goal, imageBase64, scene = '通用') {
     const cfg = getVisionConfig();
     if (!cfg || !cfg.apiKey) {
         return { done: true, feedback: '未配置视觉模型，无法评估' };
     }
-    const prompt = `你是专业的设计师和修图师。\n用户目标：${goal}\n\n请分析这张图片，判断是否已经达到目标。\n\n要求：\n1. 如果已达到目标，请只回复：完成\n2. 如果还没达到，请简明扼要地指出：具体哪里需要改、怎么改（例如"背景太暗，把背景提亮20%"），不要超过3条建议。`;
+    const criteria = SCENE_CRITERIA[scene] || SCENE_CRITERIA['通用'];
+    const prompt = `你是一位资深的专业修图师和商业设计师，审美标准很高。
+
+用户想要达到的目标：${goal}
+图片类型：${scene}
+
+请仔细分析这张图片，从以下专业维度逐一检查：
+1. 构图：主体是否突出、画面是否平衡
+2. 色彩：色调是否和谐、饱和度是否自然、有无色偏
+3. 光影：明暗层次是否丰富、高光是否过曝、阴影是否死黑
+4. 对比度：整体对比是否适中
+5. 清晰度：主体是否清晰、有无明显噪点
+6. 细节：边缘是否干净、有无瑕疵和多余杂物
+
+本类型图片的核心标准：${criteria}
+
+判断规则：
+- 如果已经达到目标，只回复两个字：完成
+- 如果还没达到，指出最关键的1-3个问题，每条都要给出具体、可执行的修改方法（例如"背景偏灰，把背景调成纯白"），不要超过3条。`;
     const result = await callVision(cfg, imageBase64, prompt, 'image/png');
     if (!result.ok) {
         return { done: true, feedback: '视觉评估失败：' + result.error };
@@ -181,7 +208,7 @@ async function executeEdit(prompt) {
 }
 
 // ---------- 闭环主循环 ----------
-async function runClosedLoop(goal, maxRounds = 2) {
+async function runClosedLoop(goal, maxRounds = 2, scene = '通用') {
     const steps = [];
     for (let i = 1; i <= maxRounds; i++) {
         // 1. 导出当前图片
@@ -193,7 +220,7 @@ async function runClosedLoop(goal, maxRounds = 2) {
             break;
         }
         // 2. 视觉评估
-        const evalResult = await evaluateImage(goal, image.base64);
+        const evalResult = await evaluateImage(goal, image.base64, scene);
         steps.push({ round: i, type: 'evaluate', text: evalResult.feedback });
         if (evalResult.done) {
             steps.push({ round: i, type: 'done', text: '已达到目标' });
@@ -201,7 +228,12 @@ async function runClosedLoop(goal, maxRounds = 2) {
         }
         // 3. 执行修改
         try {
-            const instruction = `请根据以下建议修改图片：\n${evalResult.feedback}`;
+            const instruction = `你是一位专业的修图师。请按照下面的建议精确地修改图片。
+
+修改原则：先调整整体光影和色调，再处理局部细节；修改要克制、自然、不过度。
+
+具体建议：
+${evalResult.feedback}`;
             await executeEdit(instruction);
             steps.push({ round: i, type: 'execute', text: '已执行修改，继续检查...' });
         } catch (e) {

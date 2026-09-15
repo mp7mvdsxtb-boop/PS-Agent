@@ -151,11 +151,12 @@ function injectPanel(html) {
   <div class="panel-header"><h3>  闭环修图</h3><button class="panel-close" onclick="togglePanel('loop')">✕</button></div>
   <div class="panel-body">
     <div class="status-box"><span class="warn">● AI 自动"看→改→看→改"循环</span><br>先配置好视觉模型（模型设置）再使用</div>
+    <div class="form-group"><label>图片类型（选对修得更专业）</label><select id="loopScene"><option value="通用">通用</option><option value="电商产品">电商产品图</option><option value="人像">人像</option><option value="风景">风景</option><option value="美食">美食</option></select></div>
     <div class="form-group"><label>修图目标（越具体越好）</label><input type="text" id="loopGoal" placeholder="例如：把这张产品图做成白色背景的专业电商图"></div>
     <button class="btn btn-primary" id="loopBtn" onclick="runLoop()">  开始闭环修图</button>
     <div id="loop-result"></div>
   </div>
-  <div class="tips"><h4>  说明</h4><ul><li>AI先看当前PS里的图</li><li>判断哪里没达标</li><li>自动执行修改</li><li>再检查，最多3轮</li></ul></div>
+  <div class="tips"><h4>  说明</h4><ul><li>AI先看当前PS里的图</li><li>按专业标准判断哪里没达标</li><li>自动执行修改</li><li>再检查，最多2轮</li></ul></div>
 </div>`;
 
     const js = `<script>
@@ -216,7 +217,7 @@ function injectPanel(html) {
   window.runVision=async function(){
     const result=document.getElementById('vision-result');
     if(!currentImageData){result.style.display='block';result.className='error';result.textContent='请先上传一张图片';return;}
-    const prompt=document.getElementById('visionPrompt').value.trim()||'请分析这张图片，指出可以改进的地方，并给出具体的修图建议';
+    const prompt=document.getElementById('visionPrompt').value.trim()||'你是一位资深专业修图师。请从构图、色彩、光影、对比度、清晰度、细节这六个维度分析这张图片，指出可以改进的地方，并给出具体、可执行的修图建议。';
     const btn=document.getElementById('visionBtn');
     btn.textContent='⏳ 分析中...';btn.disabled=true;
     result.style.display='block';result.className='';result.textContent='AI 正在看图分析...';
@@ -286,6 +287,7 @@ function injectPanel(html) {
   // ---- 闭环修图 ----
   window.runLoop=async function(){
     const goal=document.getElementById('loopGoal').value.trim();
+    const scene=document.getElementById('loopScene').value;
     const result=document.getElementById('loop-result');
     const btn=document.getElementById('loopBtn');
     if(!goal){alert('请先填写修图目标');return;}
@@ -293,7 +295,7 @@ function injectPanel(html) {
     result.style.display='block';
     result.innerHTML='<div class="loop-step"><span class="tag">开始</span> AI 正在查看当前PS图片...</div>';
     try{
-      const res=await fetch('/api/loop/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal:goal})});
+      const res=await fetch('/api/loop/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal:goal,scene:scene})});
       const data=await res.json();
       if(!data.ok){result.innerHTML='<div class="loop-step"><span class="tag">失败</span> '+(data.error||'未知错误')+'</div>';}
       else{
@@ -445,13 +447,13 @@ const server = http.createServer(async (req, res) => {
         req.on('data', chunk => body += chunk);
         req.on('end', async () => {
             try {
-                const { goal } = JSON.parse(body);
+                const { goal, scene } = JSON.parse(body);
                 if (!goal) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ ok: false, error: '缺少目标描述' }));
                     return;
                 }
-                const steps = await runClosedLoop(goal, 2);
+                const steps = await runClosedLoop(goal, 2, scene || '通用');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true, steps }));
             } catch (e) {
